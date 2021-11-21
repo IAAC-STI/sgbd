@@ -1,0 +1,81 @@
+#! /bin/bash
+#identifica OS
+echo "----------------------Detectando Distribucion---------------------------"
+#imprimir OS
+Name=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+Distribution=$(hostnamectl | grep ubuntu)
+
+if [ -z "$Distribution" ];
+then
+	echo ">>La distribucion del sistema operativo actual es: [$Name] "
+
+	Validation=$(yum list installed | grep epel)
+		if [ -z "$Validation" ];
+		then
+			echo ">Instalacion de EPEL...[]"
+			      yum -y install epel-release
+			echo ">El EPEL ha sido instalado en el sistema...[]"
+		else 
+			echo ">El EPEl ya se encuentra instalado en el sistema... []"
+		fi
+		      #Aqui detectaremos e instalaremos el antivirus segun sea el caso  
+                      echo ">Estamos detectando el antivirus CLAMAV...[]"
+	
+	Validation=$(yum list installed | grep clamav)
+		if  [ -z "$Validation" ]; 
+		then
+			echo "-----------------------------------------------------"
+			echo "          Inicio de instalacion de antivirus"
+			echo "-----------------------------------------------------"
+			echo "                 [Instalando ClamAV]"
+			echo "-----------------------------------------------------"
+			              yum -y install clamav clamav-devel
+			echo "                                                     "
+			echo "           Instalacion ClamAV Finalizada             "
+		else 
+			echo "-----------------------------------------------------"
+			echo "              Verificacion Terminada...[]            "
+			echo "              [ClamAV ya está instalado]              "
+		fi
+
+		echo ">>Enter para actualizar....[]"
+		read -p "Quieres Actualizar: [Y=Enter/N=Cualquier Tecla]" ack
+		if [ -z "$ack" ];
+		then
+			echo ">Actualizacion en Progreso...[]"
+			yum update
+		else 
+			echo ">Actualizacion no deseada."
+		fi
+fi
+
+Distribution=$(hostnamectl | grep centos)
+if [ -z "$Distribution" ];
+then
+
+	echo "La ditribucion del sistema operativo actual es: [$Name] "
+	echo "--------------------------------------------------------"	
+	echo "      Estamos detectando el antivirus ClamAV...[]       "
+		Validation=$(dpkg-query -l | grep clamav)
+	if  (apt list clamav); 
+		then
+	echo "--------------------------------------------------------"
+	echo "               [ClamAV ya está instalado]               "
+		else 
+	echo "--------------------------------------------------------"
+	echo "          Inicio de instalacion de antivirus            "
+	echo "--------------------------------------------------------"
+	echo "                [Instalando ClamAV]                     "
+	echo "--------------------------------------------------------"	
+		apt-get install clamav clamav-daemon -y
+		fi
+		
+	echo "             >Actualizacion en progreso                 "
+                         apt-get update && apt-get upgrade -y 
+	echo "--------------------------------------------------------"
+	echo "              Actualizacion Finalizada                  "		
+fi
+
+
+
+exit
